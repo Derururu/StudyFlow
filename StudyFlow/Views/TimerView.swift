@@ -123,8 +123,17 @@ struct TimerView: View {
     }
 
     private func adjustDuration(by minutes: Int) {
-        let newSeconds = viewModel.timeRemaining + (minutes * 60)
-        let clamped = max(60, min(120 * 60, newSeconds))
+        let currentMinutes = viewModel.timeRemaining / 60
+        let snapped: Int
+        if minutes > 0 {
+            // Round up to next multiple of 5
+            snapped = ((currentMinutes / 5) + 1) * 5
+        } else {
+            // Round down to previous multiple of 5, or subtract 5 if already on a multiple
+            let mod = currentMinutes % 5
+            snapped = mod == 0 ? currentMinutes - 5 : (currentMinutes / 5) * 5
+        }
+        let clamped = max(1, min(120, snapped)) * 60
         withAnimation(.easeInOut(duration: 0.2)) {
             viewModel.timeRemaining = clamped
             viewModel.totalTime = clamped

@@ -16,25 +16,30 @@ enum AppTab: String, CaseIterable {
 
 struct ContentView: View {
     @State private var selectedTab: AppTab = .timer
-    var timerVM: TimerViewModel
+    @Bindable var timerVM: TimerViewModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Custom tab bar
-            tabBar
+        ZStack {
+            VStack(spacing: 0) {
+                // Custom tab bar
+                tabBar
 
-            // Tab content
-            Group {
-                switch selectedTab {
-                case .timer:
-                    TimerView(viewModel: timerVM)
-                case .stats:
-                    StatsView()
-                case .history:
-                    HistoryView()
+                // Tab content
+                Group {
+                    switch selectedTab {
+                    case .timer:
+                        TimerView(viewModel: timerVM)
+                    case .stats:
+                        StatsView()
+                    case .history:
+                        HistoryView()
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            ToastView(isPresented: $timerVM.showWalkReminder)
+                .animation(.spring(response: 0.5, dampingFraction: 0.8), value: timerVM.showWalkReminder)
         }
         .background(Theme.background)
         .onAppear {
@@ -59,7 +64,8 @@ struct ContentView: View {
                     }
                     .foregroundStyle(selectedTab == tab ? Theme.accent : Theme.textMuted)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
                     .background(
                         selectedTab == tab
                             ? Theme.accent.opacity(0.1)

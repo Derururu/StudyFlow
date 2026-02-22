@@ -12,6 +12,7 @@ final class TimerViewModel {
     var status: TimerStatus = .idle
     var completedPomodoros: Int = 0
     var config: TimerConfig = .load()
+    var showWalkReminder: Bool = false
 
     var selectedSubjectName: String = "General"
     var selectedSubjectColorHex: String = "#868E96"
@@ -119,6 +120,9 @@ final class TimerViewModel {
                 startDate,
                 endDate
             )
+
+            // Show walk reminder toast
+            showWalkReminder = true
         }
 
         // Play sound
