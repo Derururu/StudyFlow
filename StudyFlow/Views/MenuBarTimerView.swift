@@ -5,7 +5,6 @@ struct MenuBarTimerView: View {
     var viewModel: TimerViewModel
     @Environment(\.modelContext) private var modelContext
     @State private var subjects: [Subject] = []
-    @State private var isHoveringTag = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -54,9 +53,20 @@ struct MenuBarTimerView: View {
             }
             .padding(.top, 8)
 
-            // Tag picker (expands on hover)
-            VStack(spacing: 4) {
-                // Selected tag label
+            // Tag picker (native dropdown)
+            Menu {
+                ForEach(subjects) { subject in
+                    Button {
+                        viewModel.selectedSubjectName = subject.name
+                        viewModel.selectedSubjectColorHex = subject.colorHex
+                    } label: {
+                        HStack {
+                            Image(systemName: viewModel.selectedSubjectName == subject.name ? "checkmark.circle.fill" : "circle.fill")
+                            Text(subject.name)
+                        }
+                    }
+                }
+            } label: {
                 HStack(spacing: 4) {
                     Circle()
                         .fill(Color(hex: viewModel.selectedSubjectColorHex))
@@ -64,68 +74,16 @@ struct MenuBarTimerView: View {
                     Text(viewModel.selectedSubjectName.isEmpty ? "No Tag" : viewModel.selectedSubjectName)
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
-                    Image(systemName: "chevron.down")
+                    Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 8, weight: .bold))
                         .foregroundStyle(.tertiary)
-                        .rotationEffect(.degrees(isHoveringTag ? 180 : 0))
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(isHoveringTag ? Color.primary.opacity(0.06) : .clear)
-                )
-
-                // Expanded tag list
-                if isHoveringTag && !subjects.isEmpty {
-                    VStack(spacing: 2) {
-                        ForEach(subjects) { subject in
-                            Button {
-                                viewModel.selectedSubjectName = subject.name
-                                viewModel.selectedSubjectColorHex = subject.colorHex
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Circle()
-                                        .fill(Color(hex: subject.colorHex))
-                                        .frame(width: 6, height: 6)
-                                    Text(subject.name)
-                                        .font(.system(size: 12))
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    if viewModel.selectedSubjectName == subject.name {
-                                        Image(systemName: "checkmark")
-                                            .font(.system(size: 10, weight: .bold))
-                                            .foregroundStyle(Color(hex: "#7C5CFC"))
-                                    }
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .fill(viewModel.selectedSubjectName == subject.name
-                                            ? Color(hex: subject.colorHex).opacity(0.12)
-                                            : Color.clear)
-                                )
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .frame(width: 180)
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.primary.opacity(0.04))
-                    )
-                    .transition(.opacity.combined(with: .move(edge: .top)).combined(with: .scale(scale: 0.95, anchor: .top)))
-                }
             }
-            .animation(.easeInOut(duration: 0.2), value: isHoveringTag)
-            .onHover { hovering in
-                isHoveringTag = hovering
-                if hovering { fetchSubjects() }
-            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .onAppear { fetchSubjects() }
 
             // Controls
             HStack(spacing: 12) {
