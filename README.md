@@ -19,7 +19,8 @@ A native macOS Pomodoro timer and study tracking app built with SwiftUI & SwiftD
 
 ## Screenshots
 
-> Build and run the app to see it in action!
+### Statistics Dashboard
+![Statistics Dashboard](screenshots/dashboard.png)
 
 ## Tech Stack
 
