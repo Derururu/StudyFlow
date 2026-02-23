@@ -5,10 +5,12 @@ struct TimerView: View {
     @Bindable var viewModel: TimerViewModel
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Subject.createdAt) private var subjects: [Subject]
+    @Query private var sessions: [StudySession]
 
     @State private var showingSubjectEditor = false
     @State private var newSubjectName = ""
     @State private var selectedTagColor = "#7C5CFC"
+    @State private var isDeletingTags = false
 
     var body: some View {
         ScrollView {
@@ -210,64 +212,100 @@ struct TimerView: View {
                 }
                 .buttonStyle(.plain)
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(subjects) { subject in
-                            Button {
-                                viewModel.selectedSubjectName = subject.name
-                                viewModel.selectedSubjectColorHex = subject.colorHex
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Circle()
-                                        .fill(Color(hex: subject.colorHex))
-                                        .frame(width: 8, height: 8)
+                GeometryReader { geo in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(subjects) { subject in
+                                Button {
+                                    if isDeletingTags {
+                                        deleteTag(subject)
+                                    } else {
+                                        viewModel.selectedSubjectName = subject.name
+                                        viewModel.selectedSubjectColorHex = subject.colorHex
+                                    }
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        if isDeletingTags {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(.red)
+                                        } else {
+                                            Circle()
+                                                .fill(Color(hex: subject.colorHex))
+                                                .frame(width: 8, height: 8)
+                                        }
 
-                                    Text(subject.name)
-                                        .font(.system(size: 13, weight: .medium))
+                                        Text(subject.name)
+                                            .font(.system(size: 13, weight: .medium))
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 7)
+                                    .foregroundStyle(
+                                        isDeletingTags
+                                            ? .red
+                                            : viewModel.selectedSubjectName == subject.name
+                                                ? Theme.textPrimary
+                                                : Theme.textSecondary
+                                    )
+                                    .background(
+                                        isDeletingTags
+                                            ? Color.red.opacity(0.1)
+                                            : viewModel.selectedSubjectName == subject.name
+                                                ? Color(hex: subject.colorHex).opacity(0.2)
+                                                : Theme.surfaceLight.opacity(0.3)
+                                    )
+                                    .clipShape(Capsule())
+                                    .overlay(
+                                        isDeletingTags
+                                            ? Capsule().stroke(Color.red.opacity(0.4), lineWidth: 1)
+                                            : viewModel.selectedSubjectName == subject.name
+                                                ? Capsule().stroke(Color(hex: subject.colorHex).opacity(0.5), lineWidth: 1)
+                                                : nil
+                                    )
                                 }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 7)
-                                .foregroundStyle(
-                                    viewModel.selectedSubjectName == subject.name
-                                        ? Theme.textPrimary
-                                        : Theme.textSecondary
-                                )
-                                .background(
-                                    viewModel.selectedSubjectName == subject.name
-                                        ? Color(hex: subject.colorHex).opacity(0.2)
-                                        : Theme.surfaceLight.opacity(0.3)
-                                )
-                                .clipShape(Capsule())
-                                .overlay(
-                                    viewModel.selectedSubjectName == subject.name
-                                        ? Capsule().stroke(Color(hex: subject.colorHex).opacity(0.5), lineWidth: 1)
-                                        : nil
-                                )
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        deleteTag(subject)
+                                    } label: {
+                                        Label("Delete Tag", systemImage: "trash")
+                                    }
+                                }
+                            }
+
+                            // Add tag button
+                            Button {
+                                isDeletingTags = false
+                                showingSubjectEditor = true
+                            } label: {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(Theme.textMuted)
+                                    .frame(width: 28, height: 28)
+                                    .background(Theme.surfaceLight.opacity(0.3))
+                                    .clipShape(Circle())
                             }
                             .buttonStyle(.plain)
-                            .contextMenu {
-                                Button(role: .destructive) {
-                                    deleteTag(subject)
-                                } label: {
-                                    Label("Delete Tag", systemImage: "trash")
-                                }
-                            }
-                        }
 
-                        // Add tag button
-                        Button {
-                            showingSubjectEditor = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(Theme.textMuted)
-                                .frame(width: 28, height: 28)
-                                .background(Theme.surfaceLight.opacity(0.3))
-                                .clipShape(Circle())
+                            // Remove tag button
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    isDeletingTags.toggle()
+                                }
+                            } label: {
+                                Image(systemName: "minus")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(isDeletingTags ? .white : Theme.textMuted)
+                                    .frame(width: 28, height: 28)
+                                    .background(isDeletingTags ? Color.red.opacity(0.8) : Theme.surfaceLight.opacity(0.3))
+                                    .clipShape(Circle())
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+                        .frame(minWidth: geo.size.width)
                     }
                 }
+                .frame(height: 34)
             }
         }
         .sheet(isPresented: $showingSubjectEditor) {
@@ -409,12 +447,24 @@ struct TimerView: View {
     // MARK: - Helpers
 
     private func deleteTag(_ subject: Subject) {
+        // Reassign all sessions with this tag to "General"
+        let matchingSessions = sessions.filter { $0.subjectName == subject.name }
+        for session in matchingSessions {
+            session.subjectName = "General"
+            session.subjectColorHex = "#868E96"
+        }
+
         if viewModel.selectedSubjectName == subject.name {
             viewModel.selectedSubjectName = subjects.first(where: { $0.id != subject.id })?.name ?? ""
             viewModel.selectedSubjectColorHex = subjects.first(where: { $0.id != subject.id })?.colorHex ?? "#868E96"
         }
         modelContext.delete(subject)
         try? modelContext.save()
+
+        // Exit delete mode if no tags remain
+        if subjects.count <= 1 {
+            isDeletingTags = false
+        }
     }
 }
 
