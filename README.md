@@ -9,18 +9,31 @@ A native macOS Pomodoro timer and study tracking app built with SwiftUI & SwiftD
 ## Features
 
 - **Pomodoro Timer** — Focus, short break, and long break phases with a gorgeous animated progress ring
-- **Menu Bar Integration** — Live countdown in your macOS menu bar so you don't need the app window open
+- **Menu Bar Integration** — Live countdown in your macOS menu bar with tag & project dropdowns
 - **Custom Tags** — Create and manage study tags with custom colors; toggle delete mode to remove tags (sessions reassigned to "General")
+- **Project Mode** — Group study sessions by project; select a project from the timer or menu bar before starting a session
 - **Adjustable Durations** — Tweak timer durations inline with ±5 min controls, or via Settings
-- **Session Logging** — Every completed focus session is automatically saved with tag, duration, and timestamps
+- **Session Logging** — Every completed focus session is automatically saved with tag, project, duration, and timestamps
 - **Statistics Dashboard** — Today's study time, weekly total, streak tracking, and a 7-day bar chart
+- **Hover Tag Breakdown** — Hover over any bar in the weekly chart to see a floating pie chart of tag distribution for that day
+- **Project Breakdown** — Select a project in the Stats dashboard to see a donut pie chart of time distribution by tag
 - **Session History** — Browse past sessions grouped by date, filter by tag, swipe to delete
 - **Notifications** — Native macOS notifications when phases complete, with optional sound
+- **Keyboard Shortcut** — Press `Esc` to close the app window
 
 ## Screenshots
 
+### Timer View
+![Timer View](screenshots/timer.png)
+
+### Menu Bar
+![Menu Bar](screenshots/menubar.png)
+
 ### Statistics Dashboard
 ![Statistics Dashboard](screenshots/dashboard.png)
+
+### Session History
+![Session History](screenshots/history.png)
 
 ## Tech Stack
 
@@ -45,7 +58,7 @@ A native macOS Pomodoro timer and study tracking app built with SwiftUI & SwiftD
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/StudyFlow.git
+git clone https://github.com/Derururu/StudyFlow.git
 cd StudyFlow
 
 # Generate the Xcode project
@@ -63,17 +76,18 @@ StudyFlow/
 ├── Models/
 │   ├── StudySession.swift      # SwiftData model for logged sessions
 │   ├── Subject.swift           # SwiftData model for custom tags
+│   ├── Project.swift           # SwiftData model for projects
 │   └── TimerState.swift        # Timer phases, status, config
 ├── ViewModels/
 │   ├── TimerViewModel.swift    # Core timer logic (Observable)
 │   └── StatsViewModel.swift    # Statistics calculations
 ├── Views/
-│   ├── ContentView.swift       # Tab navigation
-│   ├── TimerView.swift         # Main timer UI
-│   ├── StatsView.swift         # Statistics dashboard
+│   ├── ContentView.swift       # Tab navigation + ESC handler
+│   ├── TimerView.swift         # Main timer UI + tag/project pickers
+│   ├── StatsView.swift         # Statistics dashboard + hover pie chart
 │   ├── HistoryView.swift       # Session history
 │   ├── SettingsView.swift      # App preferences
-│   ├── MenuBarTimerView.swift  # Menu bar dropdown
+│   ├── MenuBarTimerView.swift  # Menu bar dropdown + project selector
 │   └── Components/
 │       ├── CircularProgressRing.swift
 │       ├── StatCard.swift
@@ -90,7 +104,9 @@ StudyFlow/
 - Indigo/violet gradients for focus, teal/blue for breaks
 - Monospaced timer display with smooth animations
 - Custom circular progress ring with glow effects
+- Interactive hover tooltips with donut pie charts
 
 ## License
 
 MIT
+
