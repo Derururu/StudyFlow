@@ -4,6 +4,7 @@ import Charts
 
 struct StatsView: View {
     @Query(sort: \StudySession.startDate, order: .reverse) private var sessions: [StudySession]
+    @Query(sort: \Project.createdAt) private var projects: [Project]
     @State private var statsVM = StatsViewModel()
 
     var body: some View {
@@ -24,6 +25,9 @@ struct StatsView: View {
 
                 // Subject breakdown
                 subjectBreakdown
+
+                // Project filter + pie chart
+                projectBreakdownSection
             }
             .padding(Theme.paddingLg)
         }
@@ -155,6 +159,111 @@ struct StatsView: View {
         .glassCard()
     }
 
+    // MARK: - Project Breakdown Section
+
+    private var projectBreakdownSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Project Breakdown")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.textSecondary)
+
+                Spacer()
+
+                // Project filter picker
+                Menu {
+                    Button {
+                        statsVM.selectedProjectFilter = ""
+                        statsVM.refresh(sessions: sessions)
+                    } label: {
+                        HStack {
+                            if statsVM.selectedProjectFilter.isEmpty {
+                                Image(systemName: "checkmark")
+                            }
+                            Text("All Projects")
+                        }
+                    }
+
+                    ForEach(projects) { project in
+                        Button {
+                            statsVM.selectedProjectFilter = project.name
+                            statsVM.refresh(sessions: sessions)
+                        } label: {
+                            HStack {
+                                if statsVM.selectedProjectFilter == project.name {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text(project.name)
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill")
+                            .font(.system(size: 10))
+                        Text(statsVM.selectedProjectFilter.isEmpty ? "Select Project" : statsVM.selectedProjectFilter)
+                            .font(.system(size: 12, weight: .medium))
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 8, weight: .bold))
+                    }
+                    .foregroundStyle(statsVM.selectedProjectFilter.isEmpty ? Theme.textMuted : Theme.accent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Theme.surfaceLight.opacity(0.4))
+                    .clipShape(Capsule())
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+            }
+
+            if statsVM.selectedProjectFilter.isEmpty {
+                emptyState("Select a project to see tag distribution")
+            } else if statsVM.projectTagBreakdown.isEmpty {
+                emptyState("No sessions for this project yet")
+            } else {
+                // Pie chart
+                Chart(Array(statsVM.projectTagBreakdown.enumerated()), id: \.offset) { _, item in
+                    SectorMark(
+                        angle: .value("Duration", item.duration),
+                        innerRadius: .ratio(0.5),
+                        angularInset: 2
+                    )
+                    .foregroundStyle(Color(hex: item.colorHex))
+                    .cornerRadius(4)
+                }
+                .frame(height: 180)
+                .padding(.vertical, 4)
+
+                // Legend
+                ForEach(Array(statsVM.projectTagBreakdown.enumerated()), id: \.offset) { _, item in
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(Color(hex: item.colorHex))
+                            .frame(width: 8, height: 8)
+
+                        Text(item.name)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Theme.textPrimary)
+
+                        Spacer()
+
+                        let totalDuration = statsVM.projectTagBreakdown.reduce(0) { $0 + $1.duration }
+                        let percentage = totalDuration > 0 ? Int(Double(item.duration) / Double(totalDuration) * 100) : 0
+                        Text("\(percentage)%")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Theme.textMuted)
+
+                        Text(statsVM.formatDuration(item.duration))
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                }
+            }
+        }
+        .padding(Theme.paddingMd)
+        .glassCard()
+    }
+
     private func emptyState(_ message: String) -> some View {
         Text(message)
             .font(.system(size: 13))
@@ -163,3 +272,4 @@ struct StatsView: View {
             .padding(.vertical, Theme.paddingLg)
     }
 }
+

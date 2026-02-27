@@ -10,6 +10,8 @@ final class StudySession {
     var startDate: Date
     var endDate: Date
     var pomodoroCount: Int
+    var projectName: String
+    var projectColorHex: String
 
     init(
         subjectName: String,
@@ -17,7 +19,9 @@ final class StudySession {
         duration: Int,
         startDate: Date,
         endDate: Date,
-        pomodoroCount: Int = 1
+        pomodoroCount: Int = 1,
+        projectName: String = "",
+        projectColorHex: String = ""
     ) {
         self.id = UUID()
         self.subjectName = subjectName
@@ -26,6 +30,8 @@ final class StudySession {
         self.startDate = startDate
         self.endDate = endDate
         self.pomodoroCount = pomodoroCount
+        self.projectName = projectName
+        self.projectColorHex = projectColorHex
     }
 
     var formattedDuration: String {

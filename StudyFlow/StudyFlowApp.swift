@@ -13,11 +13,11 @@ struct StudyFlowApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 520, height: 700)
-        .modelContainer(for: [StudySession.self, Subject.self])
+        .modelContainer(for: [StudySession.self, Subject.self, Project.self])
 
         MenuBarExtra {
             MenuBarTimerView(viewModel: timerVM)
-                .modelContainer(for: [StudySession.self, Subject.self])
+                .modelContainer(for: [StudySession.self, Subject.self, Project.self])
                 .frame(width: 220)
         } label: {
             MenuBarLabel(viewModel: timerVM)
@@ -26,7 +26,7 @@ struct StudyFlowApp: App {
 
         Settings {
             SettingsView()
-                .modelContainer(for: [StudySession.self, Subject.self])
+                .modelContainer(for: [StudySession.self, Subject.self, Project.self])
         }
     }
 }

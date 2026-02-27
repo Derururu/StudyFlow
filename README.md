@@ -10,7 +10,7 @@ A native macOS Pomodoro timer and study tracking app built with SwiftUI & SwiftD
 
 - **Pomodoro Timer** — Focus, short break, and long break phases with a gorgeous animated progress ring
 - **Menu Bar Integration** — Live countdown in your macOS menu bar so you don't need the app window open
-- **Custom Tags** — Create your own study tags (e.g. "DSA", "Physics", "Reading") with custom colors
+- **Custom Tags** — Create and manage study tags with custom colors; toggle delete mode to remove tags (sessions reassigned to "General")
 - **Adjustable Durations** — Tweak timer durations inline with ±5 min controls, or via Settings
 - **Session Logging** — Every completed focus session is automatically saved with tag, duration, and timestamps
 - **Statistics Dashboard** — Today's study time, weekly total, streak tracking, and a 7-day bar chart
@@ -77,7 +77,8 @@ StudyFlow/
 │   └── Components/
 │       ├── CircularProgressRing.swift
 │       ├── StatCard.swift
-│       └── SessionRow.swift
+│       ├── SessionRow.swift
+│       └── ToastView.swift
 ├── Utils/
 │   └── Theme.swift             # Design system (colors, gradients, spacing)
 └── Assets.xcassets/            # App icon & accent color

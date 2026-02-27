@@ -17,11 +17,14 @@ final class TimerViewModel {
     var selectedSubjectName: String = "General"
     var selectedSubjectColorHex: String = "#868E96"
 
+    var selectedProjectName: String = ""
+    var selectedProjectColorHex: String = ""
+
     private var timer: AnyCancellable?
     private var sessionStartDate: Date?
 
     // Callbacks for session logging (set by the view)
-    var onSessionCompleted: ((String, String, Int, Date, Date) -> Void)?
+    var onSessionCompleted: ((String, String, Int, Date, Date, String, String) -> Void)?
 
     var progress: Double {
         guard totalTime > 0 else { return 0 }
@@ -118,7 +121,9 @@ final class TimerViewModel {
                 selectedSubjectColorHex,
                 totalTime,
                 startDate,
-                endDate
+                endDate,
+                selectedProjectName,
+                selectedProjectColorHex
             )
 
             // Show walk reminder toast

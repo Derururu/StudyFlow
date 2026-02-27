@@ -11,6 +11,8 @@ final class StatsViewModel {
     var todaySessions: Int = 0
     var subjectBreakdown: [(name: String, colorHex: String, duration: Int)] = []
     var dailyTotals: [(date: Date, duration: Int)] = [] // last 7 days
+    var selectedProjectFilter: String = ""
+    var projectTagBreakdown: [(name: String, colorHex: String, duration: Int)] = []
 
     func refresh(sessions: [StudySession]) {
         let calendar = Calendar.current
@@ -62,6 +64,23 @@ final class StatsViewModel {
             } else {
                 break
             }
+        }
+
+        // Project tag breakdown (all time, filtered by project)
+        if !selectedProjectFilter.isEmpty {
+            let projectSessions = sessions.filter { $0.projectName == selectedProjectFilter }
+            var tagMap: [String: (colorHex: String, duration: Int)] = [:]
+            for session in projectSessions {
+                let existing = tagMap[session.subjectName]
+                tagMap[session.subjectName] = (
+                    colorHex: session.subjectColorHex,
+                    duration: (existing?.duration ?? 0) + session.duration
+                )
+            }
+            projectTagBreakdown = tagMap.map { (name: $0.key, colorHex: $0.value.colorHex, duration: $0.value.duration) }
+                .sorted { $0.duration > $1.duration }
+        } else {
+            projectTagBreakdown = []
         }
     }
 
