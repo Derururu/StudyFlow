@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 enum AppTab: String, CaseIterable {
     case timer = "Timer"
@@ -44,6 +45,9 @@ struct ContentView: View {
         .background(Theme.background)
         .onAppear {
             timerVM.requestNotificationPermission()
+        }
+        .onExitCommand {
+            NSApplication.shared.keyWindow?.close()
         }
     }
 

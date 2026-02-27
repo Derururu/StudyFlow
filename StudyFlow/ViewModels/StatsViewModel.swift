@@ -11,6 +11,7 @@ final class StatsViewModel {
     var todaySessions: Int = 0
     var subjectBreakdown: [(name: String, colorHex: String, duration: Int)] = []
     var dailyTotals: [(date: Date, duration: Int)] = [] // last 7 days
+    var dailyTagBreakdowns: [Date: [(name: String, colorHex: String, duration: Int)]] = [:]
     var selectedProjectFilter: String = ""
     var projectTagBreakdown: [(name: String, colorHex: String, duration: Int)] = []
 
@@ -43,14 +44,31 @@ final class StatsViewModel {
         subjectBreakdown = subjectMap.map { (name: $0.key, colorHex: $0.value.colorHex, duration: $0.value.duration) }
             .sorted { $0.duration > $1.duration }
 
-        // Daily totals for last 7 days
-        dailyTotals = (0..<7).map { dayOffset in
+        // Daily totals + per-day tag breakdowns for last 7 days
+        var tempDailyTotals: [(date: Date, duration: Int)] = []
+        var tempDailyBreakdowns: [Date: [(name: String, colorHex: String, duration: Int)]] = [:]
+
+        for dayOffset in (0..<7).reversed() {
             let date = calendar.date(byAdding: .day, value: -dayOffset, to: startOfToday)!
             let dayEnd = calendar.date(byAdding: .day, value: 1, to: date)!
             let daySessions = sessions.filter { $0.startDate >= date && $0.startDate < dayEnd }
             let total = daySessions.reduce(0) { $0 + $1.duration }
-            return (date: date, duration: total)
-        }.reversed()
+            tempDailyTotals.append((date: date, duration: total))
+
+            // Per-day tag breakdown
+            var dayTagMap: [String: (colorHex: String, duration: Int)] = [:]
+            for session in daySessions {
+                let existing = dayTagMap[session.subjectName]
+                dayTagMap[session.subjectName] = (
+                    colorHex: session.subjectColorHex,
+                    duration: (existing?.duration ?? 0) + session.duration
+                )
+            }
+            tempDailyBreakdowns[date] = dayTagMap.map { (name: $0.key, colorHex: $0.value.colorHex, duration: $0.value.duration) }
+                .sorted { $0.duration > $1.duration }
+        }
+        dailyTotals = tempDailyTotals
+        dailyTagBreakdowns = tempDailyBreakdowns
 
         // Streak calculation
         currentStreak = 0
