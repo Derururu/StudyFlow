@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import SwiftData
 import Combine
 import UserNotifications
 import AppKit
@@ -20,11 +21,16 @@ final class TimerViewModel {
     var selectedProjectName: String = ""
     var selectedProjectColorHex: String = ""
 
+    // Session Notes
+    var sessionNotes: String = ""
+    var isNotesExpanded: Bool = false
+
     private var timer: AnyCancellable?
     private var sessionStartDate: Date?
+    private var sessionSaved: Bool = false
 
     // Callbacks for session logging (set by the view)
-    var onSessionCompleted: ((String, String, Int, Date, Date, String, String) -> Void)?
+    private var onSessionCompleted: ((String, String, Int, Date, Date, String, String) -> Void)?
 
     var progress: Double {
         guard totalTime > 0 else { return 0 }
@@ -48,6 +54,7 @@ final class TimerViewModel {
     func start() {
         if status == .idle {
             sessionStartDate = Date()
+            sessionSaved = false
         }
         status = .running
         timer = Timer.publish(every: 1, on: .main, in: .common)
@@ -97,6 +104,56 @@ final class TimerViewModel {
         }
     }
 
+    func adjustDuration(by minutes: Int) {
+        let currentMinutes = timeRemaining / 60
+        let snapped: Int
+        if minutes > 0 {
+            snapped = ((currentMinutes / 5) + 1) * 5
+        } else {
+            let mod = currentMinutes % 5
+            snapped = mod == 0 ? currentMinutes - 5 : (currentMinutes / 5) * 5
+        }
+        let clamped = max(1, min(120, snapped)) * 60
+        withAnimation(.easeInOut(duration: 0.2)) {
+            timeRemaining = clamped
+            totalTime = clamped
+        }
+        switch currentPhase {
+        case .focus:
+            config.focusDuration = clamped
+        case .shortBreak:
+            config.shortBreakDuration = clamped
+        case .longBreak:
+            config.longBreakDuration = clamped
+        }
+        config.save()
+    }
+
+    func setupSessionCallback(modelContext: ModelContext) {
+        onSessionCompleted = { name, color, duration, start, end, projName, projColor in
+            let session = StudySession(
+                subjectName: name,
+                subjectColorHex: color,
+                duration: duration,
+                startDate: start,
+                endDate: end,
+                projectName: projName,
+                projectColorHex: projColor
+            )
+            modelContext.insert(session)
+            try? modelContext.save()
+        }
+    }
+
+    static func formatDuration(_ seconds: Int) -> String {
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        }
+        return "\(minutes)m"
+    }
+
     private func tick() {
         guard timeRemaining > 0 else { return }
         timeRemaining -= 1
@@ -111,7 +168,8 @@ final class TimerViewModel {
         timer = nil
         status = .idle
 
-        if currentPhase == .focus {
+        if currentPhase == .focus && !sessionSaved {
+            sessionSaved = true
             completedPomodoros += 1
             let endDate = Date()
             let startDate = sessionStartDate ?? endDate.addingTimeInterval(-Double(totalTime))

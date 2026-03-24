@@ -103,11 +103,6 @@ final class StatsViewModel {
     }
 
     func formatDuration(_ seconds: Int) -> String {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        }
-        return "\(minutes)m"
+        TimerViewModel.formatDuration(seconds)
     }
 }

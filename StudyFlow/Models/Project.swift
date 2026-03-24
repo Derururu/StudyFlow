@@ -1,5 +1,4 @@
 import Foundation
-import SwiftUI
 import SwiftData
 
 @Model
@@ -14,10 +13,6 @@ final class Project {
         self.name = name
         self.colorHex = colorHex
         self.createdAt = Date()
-    }
-
-    var color: Color {
-        Color(hex: colorHex)
     }
 
     static let projectColors: [String] = [

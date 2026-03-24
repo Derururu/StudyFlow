@@ -1,10 +1,18 @@
 import SwiftUI
 import SwiftData
-import Combine
 
 @main
 struct StudyFlowApp: App {
     @State private var timerVM = TimerViewModel()
+    let modelContainer: ModelContainer
+
+    init() {
+        do {
+            modelContainer = try ModelContainer(for: StudySession.self, Subject.self, Project.self)
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -13,11 +21,11 @@ struct StudyFlowApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 520, height: 700)
-        .modelContainer(for: [StudySession.self, Subject.self, Project.self])
+        .modelContainer(modelContainer)
 
         MenuBarExtra {
             MenuBarTimerView(viewModel: timerVM)
-                .modelContainer(for: [StudySession.self, Subject.self, Project.self])
+                .modelContainer(modelContainer)
                 .frame(width: 220)
         } label: {
             MenuBarLabel(viewModel: timerVM)
@@ -26,7 +34,7 @@ struct StudyFlowApp: App {
 
         Settings {
             SettingsView()
-                .modelContainer(for: [StudySession.self, Subject.self, Project.self])
+                .modelContainer(modelContainer)
         }
     }
 }

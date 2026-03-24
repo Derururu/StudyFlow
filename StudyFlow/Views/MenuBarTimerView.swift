@@ -18,7 +18,7 @@ struct MenuBarTimerView: View {
                 HStack(spacing: 8) {
                     if viewModel.status == .idle {
                         Button {
-                            adjustDuration(by: -5)
+                            viewModel.adjustDuration(by: -5)
                         } label: {
                             Image(systemName: "minus.circle.fill")
                                 .font(.system(size: 20))
@@ -38,7 +38,7 @@ struct MenuBarTimerView: View {
 
                     if viewModel.status == .idle {
                         Button {
-                            adjustDuration(by: 5)
+                            viewModel.adjustDuration(by: 5)
                         } label: {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: 20))
@@ -84,7 +84,6 @@ struct MenuBarTimerView: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-            .onAppear { fetchSubjects() }
 
             // Project picker (native dropdown)
             Menu {
@@ -126,7 +125,6 @@ struct MenuBarTimerView: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-            .onAppear { fetchProjects() }
 
             // Controls
             HStack(spacing: 12) {
@@ -143,7 +141,6 @@ struct MenuBarTimerView: View {
 
                 Button {
                     if viewModel.canStart {
-                        setupSessionCallback()
                         viewModel.start()
                     } else {
                         viewModel.pause()
@@ -186,7 +183,7 @@ struct MenuBarTimerView: View {
         }
         .padding(12)
         .onAppear {
-            setupSessionCallback()
+            viewModel.setupSessionCallback(modelContext: modelContext)
             fetchSubjects()
             fetchProjects()
         }
@@ -202,44 +199,4 @@ struct MenuBarTimerView: View {
         projects = (try? modelContext.fetch(descriptor)) ?? []
     }
 
-    private func setupSessionCallback() {
-        viewModel.onSessionCompleted = { name, color, duration, start, end, projName, projColor in
-            let session = StudySession(
-                subjectName: name,
-                subjectColorHex: color,
-                duration: duration,
-                startDate: start,
-                endDate: end,
-                projectName: projName,
-                projectColorHex: projColor
-            )
-            modelContext.insert(session)
-            try? modelContext.save()
-        }
-    }
-
-    private func adjustDuration(by minutes: Int) {
-        let currentMinutes = viewModel.timeRemaining / 60
-        let snapped: Int
-        if minutes > 0 {
-            snapped = ((currentMinutes / 5) + 1) * 5
-        } else {
-            let mod = currentMinutes % 5
-            snapped = mod == 0 ? currentMinutes - 5 : (currentMinutes / 5) * 5
-        }
-        let clamped = max(1, min(120, snapped)) * 60
-        withAnimation(.easeInOut(duration: 0.2)) {
-            viewModel.timeRemaining = clamped
-            viewModel.totalTime = clamped
-        }
-        switch viewModel.currentPhase {
-        case .focus:
-            viewModel.config.focusDuration = clamped
-        case .shortBreak:
-            viewModel.config.shortBreakDuration = clamped
-        case .longBreak:
-            viewModel.config.longBreakDuration = clamped
-        }
-        viewModel.config.save()
-    }
 }

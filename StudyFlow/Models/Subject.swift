@@ -16,10 +16,6 @@ final class Subject {
         self.createdAt = Date()
     }
 
-    var color: Color {
-        Color(hex: colorHex)
-    }
-
     static let tagColors: [String] = [
         "#7C5CFC", "#00C9A7", "#FF6B6B", "#FFA94D",
         "#339AF0", "#E599F7", "#FF922B", "#868E96",

@@ -5,14 +5,6 @@ enum TimerPhase: String, CaseIterable {
     case shortBreak = "Short Break"
     case longBreak = "Long Break"
 
-    var defaultDuration: Int {
-        switch self {
-        case .focus: return 25 * 60
-        case .shortBreak: return 5 * 60
-        case .longBreak: return 15 * 60
-        }
-    }
-
     var emoji: String {
         switch self {
         case .focus: return "🎯"

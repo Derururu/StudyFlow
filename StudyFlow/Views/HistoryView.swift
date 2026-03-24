@@ -97,7 +97,7 @@ struct HistoryView: View {
                                 Spacer()
 
                                 let dayTotal = group.sessions.reduce(0) { $0 + $1.duration }
-                                Text(formatDuration(dayTotal))
+                                Text(TimerViewModel.formatDuration(dayTotal))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundStyle(Theme.accent)
                             }
@@ -142,12 +142,7 @@ struct HistoryView: View {
         try? modelContext.save()
     }
 
-    private func formatDuration(_ seconds: Int) -> String {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        if hours > 0 { return "\(hours)h \(minutes)m" }
-        return "\(minutes)m"
-    }
+
 }
 
 // MARK: - Filter Chip
